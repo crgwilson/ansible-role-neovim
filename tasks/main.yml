@@ -1,0 +1,28 @@
+---
+- name: Get OS specific vars
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_system }}.yml"
+    - "{{ ansible_os_family }}.yml"
+
+- name: Check is Neovim is already installed
+  stat:
+    path: "{{ neovim_install_prefix }}/nvim-{{neovim_arch }}/bin/nvim"
+  register: nvim_stat
+
+- name: Download Neovim archive
+  get_url:
+    url: "{{ neovim_archive_uri }}"
+    dest: "{{ neovim_tmp_dir }}/{{ neovim_archive_name }}"
+    checksum: "{{ neovim_checksum_algo }}:{{ neovim_download_checksum_uri }}"
+  when: not nvim_stat.stat.exists
+
+- name: Unpack Neovim archive
+  unarchive:
+    src: "{{ neovim_tmp_dir }}/{{ neovim_archive_name }}"
+    dest: "{{ neovim_install_prefix }}"
+    owner: "{{ neovim_owner }}"
+    group: "{{ neovim_group }}"
+    remote_src: true
+    creates: "{{ neovim_install_prefix }}/nvim-{{ neovim_arch }}/bin/nvim"
+  when: not nvim_stat.stat.exists

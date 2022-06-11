@@ -1,0 +1,3 @@
+# Ansible role: neovim
+
+TODO
